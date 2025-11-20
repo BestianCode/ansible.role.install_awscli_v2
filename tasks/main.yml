@@ -1,0 +1,39 @@
+---
+
+- name: Check if AWS CLI is already installed
+  stat:
+    path: /usr/local/bin/aws
+  register: aws_cli_exists
+
+- name: Download AWS CLI v2 bundle
+  get_url:
+    url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    dest: "/tmp/awscliv2.zip"
+    mode: '0644'
+  become: true
+  when: not aws_cli_exists.stat.exists
+
+- name: Unarchive AWS CLI v2 bundle
+  unarchive:
+    src: "/tmp/awscliv2.zip"
+    dest: "/tmp"
+    remote_src: yes
+  become: true
+  when: not aws_cli_exists.stat.exists
+
+- name: Install AWS CLI v2
+  command: "/tmp/aws/install --update"
+  become: true
+  when: not aws_cli_exists.stat.exists
+
+- name: Clean up AWS CLI installer directory
+  file:
+    path: "/tmp/aws"
+    state: absent
+  become: true
+
+- name: Remove AWS CLI bundle zip file
+  file:
+    path: "/tmp/awscliv2.zip"
+    state: absent
+  become: true
